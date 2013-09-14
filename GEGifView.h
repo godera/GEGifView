@@ -8,7 +8,7 @@
 //from SvGifView and OLImageView
 //MRC MRC MRC MRC MRC MRC MRC MRC MRC MRC MRC
 
-//本GIF类打印语句的开关信息，设为0即关
+//0 to close debug
 #ifdef DEBUG
 #define DEBUG_SWITCH_GIF 0
 #else
@@ -40,6 +40,7 @@
 @property (nonatomic, copy) NSString* filePath;//gif file path
 
 @property (nonatomic, assign) NSInteger repeatCount;//defaults to infinite
+@property (nonatomic, readonly) CGFloat duration;//the total time
 
 /* brief The default mode (NSDefaultRunLoopMode), causes the animation to pauses while it is contained in an actively scrolling `UIScrollView`. 
          Use NSRunLoopCommonModes if you don't want this behavior.

@@ -225,6 +225,10 @@
     _displayLink.paused = YES;
 }
 
+-(CGFloat)duration
+{
+    return _totalTime;
+}
 
 -(NSString *)description
 {
