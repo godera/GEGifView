@@ -11,7 +11,6 @@
 
 @interface GEGifView() {
     CADisplayLink* _displayLink;
-    NSRunLoop* _runloop;
     
     NSMutableArray* _frameImages;//CGImageRefs
     NSMutableArray* _frameDelayTimes;
@@ -37,10 +36,10 @@
     [_filePath release];
     [_fileName release];
 
+    [_image release];
     [_runLoopMode release];
     
     [_displayLink release];
-    [_runloop release];
     
     [_frameImages release];
     [_frameDelayTimes release];
@@ -58,7 +57,6 @@
         self.contentMode = UIViewContentModeScaleAspectFit;
         
         _runLoopMode = NSDefaultRunLoopMode;
-        _runloop = [NSRunLoop mainRunLoop];
         
         _clearWhenStop = YES;
         
@@ -203,12 +201,14 @@
         _displayLink.paused = NO;
     }else{// a new start
         _currentTimePoint = 0;
-        _comparedFrameIndex = 0;
         _decreasingCount = _repeatCount;
+        
+        self.layer.contents = _frameImages[0];
+        _comparedFrameIndex = 1;
         
         [_displayLink invalidate];
         _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(changeFrame:)];
-        [_displayLink addToRunLoop:_runloop forMode:_runLoopMode];
+        [_displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:_runLoopMode];
     }
 }
 
@@ -230,6 +230,15 @@
 -(CGFloat)duration
 {
     return _totalTime;
+}
+
+-(void)setImage:(UIImage *)image
+{
+    UIImage* temp = [image retain];
+    [_image release];
+    _image = temp;
+    
+    self.layer.contents = (id)[image CGImage];
 }
 
 -(NSString *)description

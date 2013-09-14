@@ -43,6 +43,8 @@
 @property (nonatomic, assign) NSInteger repeatCount;//defaults to infinite
 @property (nonatomic, readonly) CGFloat duration;//the total time
 
+@property (nonatomic, retain) UIImage* image;
+
 /* brief The default mode (NSDefaultRunLoopMode), causes the animation to pauses while it is contained in an actively scrolling `UIScrollView`. 
          Use NSRunLoopCommonModes if you don't want this behavior.
  */
