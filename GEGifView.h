@@ -29,6 +29,7 @@
  _gifView = gifView;
  [gifView start];
  */
+/* Attention: like UIImageView, its userInteractionEnabled defaults to NO, avoid to intercept touch*/
 
 #import <UIKit/UIKit.h>
 
