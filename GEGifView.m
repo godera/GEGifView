@@ -9,32 +9,32 @@
 #import <ImageIO/ImageIO.h>
 #import <QuartzCore/CoreAnimation.h>
 
-@interface GEGifView() {
-    CADisplayLink* _displayLink;
-    
-    NSMutableArray* _frameImages;//CGImageRefs
-    NSMutableArray* _frameDelayTimes;
-    NSMutableArray* _frameStartTimes;//the 0 frame corresponds to time point 0.
+@interface GEGifView()
+{
     NSInteger _comparedFrameIndex;
     NSTimeInterval _currentTimePoint;//compared to item in _frameStartTimes
     
-    CGFloat _totalTime;         // seconds
     CGFloat _width;
     CGFloat _height;
     
     NSInteger _decreasingCount;
 }
+@property (copy, nonatomic) NSArray* frameImages;//CGImageRefs
+@property (copy, nonatomic) NSArray* frameStartTimes;//the 0 frame corresponds to time point 0.
+@property (assign, nonatomic) CADisplayLink* displayLink;
 
 @end
 
 
 @implementation GEGifView
+@synthesize frameItems = _frameItems;
 
 - (void)dealloc
 {
     [_data release];
     [_filePath release];
     [_fileName release];
+    [_frameItems release];
 
     [_image release];
     [_runLoopMode release];
@@ -42,7 +42,6 @@
     [_displayLink release];
     
     [_frameImages release];
-    [_frameDelayTimes release];
     [_frameStartTimes release];
     
     [super dealloc];
@@ -60,12 +59,8 @@
         
         _clearWhenStop = YES;
         
-        _frameImages = [NSMutableArray new];
-        _frameDelayTimes = [NSMutableArray new];
-        _frameStartTimes = [NSMutableArray new];
         _comparedFrameIndex = 0;
         
-        _totalTime = 0;
         _width = 0;
         _height = 0;
         
@@ -81,7 +76,7 @@
     [_data release];
     _data = temp;
     
-    CGImageSourceRef gifSource = CGImageSourceCreateWithData((CFDataRef)_data, NULL);
+    CGImageSourceRef gifSource = CGImageSourceCreateWithData((CFDataRef)data, NULL);
     
     [self getFrameInfosFromGifSource:gifSource];
     
@@ -96,7 +91,7 @@
     [_fileName release];
     _fileName = temp;
     
-    NSString *filePath = [[NSBundle mainBundle]pathForResource:_fileName ofType:nil];
+    NSString *filePath = [[NSBundle mainBundle]pathForResource:fileName ofType:nil];
     NSURL* fileURL = [NSURL fileURLWithPath:filePath];
     CGImageSourceRef gifSource = CGImageSourceCreateWithURL((CFURLRef)fileURL, NULL);
     
@@ -123,6 +118,21 @@
     }
 }
 
+- (void)setFrameItems:(NSDictionary *)frameItems
+{
+    NSDictionary* temp = [frameItems copy];
+    [_frameItems release];
+    _frameItems = temp;
+    
+    self.frameImages = [frameItems objectForKey:KEY_FRAME_IMAGES];
+    self.frameStartTimes = [frameItems objectForKey:KEY_FRAME_START_TIMES];
+}
+
+-(NSDictionary *)frameItems
+{
+    return @{KEY_FRAME_IMAGES:_frameImages, KEY_FRAME_START_TIMES:_frameStartTimes};
+}
+
 
 /*
  * @brief gets gif information
@@ -130,17 +140,16 @@
 - (void)getFrameInfosFromGifSource:(CGImageSourceRef)gifSource
 {
     // init
-    _totalTime = 0;
-    [_frameImages removeAllObjects];
-    [_frameDelayTimes removeAllObjects];
-    [_frameStartTimes removeAllObjects];
+    NSMutableArray* frameImages = [[NSMutableArray new] autorelease];
+    NSMutableArray* frameStartTimes = [[NSMutableArray new] autorelease];
+    NSMutableArray* frameDelayTimes = [[NSMutableArray new] autorelease];
     
     // get frame count
     size_t frameCount = CGImageSourceGetCount(gifSource);
     for (size_t i = 0; i < frameCount; ++i) {
         // get each frame
         CGImageRef frame = CGImageSourceCreateImageAtIndex(gifSource, i, NULL);
-        [_frameImages addObject:(id)frame];
+        [frameImages addObject:(id)frame];
         CGImageRelease(frame);
         
         // get gif info with each frame
@@ -155,21 +164,23 @@
         NSDictionary *gifDict = [dict objectForKey:(NSString*)kCGImagePropertyGIFDictionary];
         
         id aDelayTime = [gifDict objectForKey:(NSString*)kCGImagePropertyGIFDelayTime];
-        [_frameDelayTimes addObject:aDelayTime];
+        [frameDelayTimes addObject:aDelayTime];
         
-        _totalTime += [aDelayTime floatValue];
-
         CFRelease(dict);
     }
     
     // get frame start times
-    [_frameStartTimes addObject:@(0)];
+    [frameStartTimes addObject:@(0)];
     CGFloat currentFrameStartTime = 0;
-    for (id aDelayTime in _frameDelayTimes) {
+    for (id aDelayTime in frameDelayTimes) {
         currentFrameStartTime += [aDelayTime floatValue];
-        [_frameStartTimes addObject:@(currentFrameStartTime)];
+        [frameStartTimes addObject:@(currentFrameStartTime)];
     }
-
+    
+    // assign values
+    self.frameImages = frameImages;
+    self.frameStartTimes = frameStartTimes;
+    
 }
 
 - (void)changeFrame:(CADisplayLink*)displayLink
@@ -229,7 +240,7 @@
 
 -(CGFloat)duration
 {
-    return _totalTime;
+    return [[_frameStartTimes lastObject] floatValue];
 }
 
 -(void)setImage:(UIImage *)image

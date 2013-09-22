@@ -5,10 +5,20 @@
 //  Copyright (c) 2013. All rights reserved.
 //
 //  QQ: 719181178
-//from SvGifView and OLImageView
-//MRC MRC MRC MRC MRC MRC MRC MRC MRC MRC MRC
+/* from SvGifView and OLImageView */
+/* MRC */
 
-//0 to close debug
+/*usage:
+ GEGifView* gifView = [[[GEGifView alloc] initWithFrame:CGRectMake(0, 100, 320, 130)] autorelease];
+ gifView.fileName = @"jiafei.gif";
+ gifView.repeatCount = 2;
+ [self.view addSubview:gifView];
+ _gifView = gifView;
+ [gifView start];
+ */
+/* Attention: like UIImageView, its userInteractionEnabled defaults to NO, avoid to intercept touch */
+
+//0 to close debug, 1 to open
 #ifdef DEBUG
 #define DEBUG_SWITCH_GIF 0
 #else
@@ -21,15 +31,8 @@
 #define GELOG_GIF(...)
 #endif
 
-/*usage:
- GEGifView* gifView = [[[GEGifView alloc] initWithFrame:CGRectMake(0, 100, 320, 130)] autorelease];
- gifView.fileName = @"jiafei.gif";
- gifView.repeatCount = 2;
- [self.view addSubview:gifView];
- _gifView = gifView;
- [gifView start];
- */
-/* Attention: like UIImageView, its userInteractionEnabled defaults to NO, avoid to intercept touch*/
+#define KEY_FRAME_IMAGES @"KEY_FRAME_IMAGES"
+#define KEY_FRAME_START_TIMES @"KEY_FRAME_START_TIMES"
 
 #import <UIKit/UIKit.h>
 
@@ -39,6 +42,7 @@
 @property (nonatomic, copy) NSData* data;//gif data
 @property (nonatomic, copy) NSString* fileName;//gif file from bundle
 @property (nonatomic, copy) NSString* filePath;//gif file path
+@property (nonatomic, copy) NSDictionary* frameItems;//contains frame images and frame start times.
 
 @property (nonatomic, assign) NSInteger repeatCount;//defaults to infinite
 @property (nonatomic, readonly) CGFloat duration;//the total time
