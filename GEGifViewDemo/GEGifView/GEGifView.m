@@ -163,6 +163,7 @@ typedef enum {
         _mediaType = GEMediaType_IMAGE;
         CGImageRef frame = CGImageSourceCreateImageAtIndex(gifSource, 0, NULL);
         self.layer.contents = (id)frame;
+        CGImageRelease(frame);
         return;
     }
     
