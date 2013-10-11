@@ -1,16 +1,21 @@
 //
-//  GEGifView.m
+//  GEGifView.h
 //
 //  Created by godera@yeah.net on 9/14/13.
 //  Copyright (c) 2013. All rights reserved.
 //
 //  QQ: 719181178
-/* based on SvGifView and OLImageView */
+/* supports both gif and image, based on SvGifView and OLImageView */
 /* MRC */
 
 #import "GEGifView.h"
 #import <ImageIO/ImageIO.h>
 #import <QuartzCore/CoreAnimation.h>
+
+typedef enum {
+    GEMediaType_GIF = 0,
+    GEMediaType_IMAGE,
+}GEMediaType;
 
 @interface GEGifView()
 {
@@ -21,6 +26,8 @@
     CGFloat _height;
     
     NSInteger _decreasingCount;
+    
+    GEMediaType _mediaType;
 }
 @property (copy, nonatomic) NSArray* frameImages; // CGImageRefs
 @property (copy, nonatomic) NSArray* frameStartTimes; // the 0 frame corresponds to time point 0.
@@ -30,16 +37,13 @@
 
 
 @implementation GEGifView
-@synthesize frameItems = _frameItems;
 
 - (void)dealloc
 {
     [_data release];
     [_filePath release];
     [_fileName release];
-    [_frameItems release];
 
-    [_image release];
     [_runLoopMode release];
     
     [_frameImages release];
@@ -132,10 +136,6 @@
 
 - (void)setFrameItems:(NSDictionary *)frameItems
 {
-    NSDictionary* temp = [frameItems copy];
-    [_frameItems release];
-    _frameItems = temp;
-    
     self.frameImages = [frameItems objectForKey:KEY_FRAME_IMAGES];
     self.frameStartTimes = [frameItems objectForKey:KEY_FRAME_START_TIMES];
 }
@@ -158,7 +158,17 @@
     
     // get frame count
     size_t frameCount = CGImageSourceGetCount(gifSource);
-    for (size_t i = 0; i < frameCount; ++i) {
+    
+    if (frameCount <= 1) {
+        _mediaType = GEMediaType_IMAGE;
+        CGImageRef frame = CGImageSourceCreateImageAtIndex(gifSource, 0, NULL);
+        self.layer.contents = (id)frame;
+        return;
+    }
+    
+    _mediaType = GEMediaType_GIF;
+    for (size_t i = 0; i < frameCount; ++i)
+    {
         // get each frame
         CGImageRef frame = CGImageSourceCreateImageAtIndex(gifSource, i, NULL);
         [frameImages addObject:(id)frame];
@@ -184,7 +194,8 @@
     // get frame start times
     [frameStartTimes addObject:@(0)];
     CGFloat currentFrameStartTime = 0;
-    for (id aDelayTime in frameDelayTimes) {
+    for (id aDelayTime in frameDelayTimes)
+    {
         currentFrameStartTime += [aDelayTime floatValue];
         [frameStartTimes addObject:@(currentFrameStartTime)];
     }
@@ -197,15 +208,19 @@
 
 - (void)changeFrame:(CADisplayLink*)displayLink
 {
-    GELOG_GIF(@"compared time point = %f",[_frameStartTimes[_comparedFrameIndex] doubleValue]);
-    GELOG_GIF(@"current time point = %f",displayLink.duration);
-    
     _currentTimePoint += displayLink.duration;
-    if (_currentTimePoint >= [_frameStartTimes[_comparedFrameIndex] doubleValue]) {
-        if (_comparedFrameIndex >= _frameImages.count) { // one loop
-            if (_repeatCount != NSUIntegerMax) {
+    
+    GELOG_GIF(@"time point = Current:%f--%f:Compared",_currentTimePoint,[_frameStartTimes[_comparedFrameIndex] doubleValue]);
+    
+    if (_currentTimePoint >= [_frameStartTimes[_comparedFrameIndex] doubleValue])
+    {
+        if (_comparedFrameIndex >= _frameImages.count) // one loop
+        {
+            if (_repeatCount != NSUIntegerMax)
+            {
                 _decreasingCount --;
-                if (_decreasingCount == 0) {
+                if (_decreasingCount == 0)
+                {
                     [self stop];
                     return;
                 }
@@ -220,6 +235,11 @@
 
 - (void)start
 {
+    if (_mediaType == GEMediaType_IMAGE)
+    {
+        return;
+    }
+    
     if (_displayLink.paused == YES) { // recover from pause state
         _displayLink.paused = NO;
     }else{ // a new start
@@ -237,6 +257,11 @@
 
 - (void)stop
 {
+    if (_mediaType == GEMediaType_IMAGE)
+    {
+        return;
+    }
+    
     [_displayLink invalidate];
     _displayLink = nil;
     
@@ -247,6 +272,11 @@
 
 - (void)pause
 {
+    if (_mediaType == GEMediaType_IMAGE)
+    {
+        return;
+    }
+    
     _displayLink.paused = YES;
 }
 
@@ -257,16 +287,17 @@
 
 -(void)setImage:(UIImage *)image
 {
-    UIImage* temp = [image retain];
-    [_image release];
-    _image = temp;
-    
     self.layer.contents = (id)[image CGImage];
+}
+
+-(UIImage *)image
+{
+    return [UIImage imageWithCGImage:(CGImageRef)self.layer.contents];
 }
 
 -(NSString *)description
 {
-    return [NSString stringWithFormat:@"fileName = %@, filePath = %@, repeatCount = %d, frameCount = %d",_fileName,_filePath,_repeatCount,_frameImages.count];
+    return [NSString stringWithFormat:@"fileName = %@, filePath = %@, repeatCount = %ld, frameCount = %lu",_fileName,_filePath,(long)_repeatCount,(unsigned long)_frameImages.count];
 }
 
 @end

@@ -5,7 +5,7 @@
 //  Copyright (c) 2013. All rights reserved.
 //
 //  QQ: 719181178
-/* based on SvGifView and OLImageView */
+/* supports both gif and image, based on SvGifView and OLImageView */
 /* MRC */
 
 /*usage:
