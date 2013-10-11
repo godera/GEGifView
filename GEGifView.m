@@ -1,9 +1,12 @@
 //
 //  GEGifView.m
 //
-//  Created by godera on 3/28/13.
+//  Created by godera@yeah.net on 9/14/13.
 //  Copyright (c) 2013. All rights reserved.
 //
+//  QQ: 719181178
+/* based on SvGifView and OLImageView */
+/* MRC */
 
 #import "GEGifView.h"
 #import <ImageIO/ImageIO.h>
@@ -12,15 +15,15 @@
 @interface GEGifView()
 {
     NSInteger _comparedFrameIndex;
-    NSTimeInterval _currentTimePoint;//compared to item in _frameStartTimes
+    NSTimeInterval _currentTimePoint; // compared to item in _frameStartTimes
     
     CGFloat _width;
     CGFloat _height;
     
     NSInteger _decreasingCount;
 }
-@property (copy, nonatomic) NSArray* frameImages;//CGImageRefs
-@property (copy, nonatomic) NSArray* frameStartTimes;//the 0 frame corresponds to time point 0.
+@property (copy, nonatomic) NSArray* frameImages; // CGImageRefs
+@property (copy, nonatomic) NSArray* frameStartTimes; // the 0 frame corresponds to time point 0.
 @property (assign, nonatomic) CADisplayLink* displayLink;
 
 @end
@@ -39,12 +42,22 @@
     [_image release];
     [_runLoopMode release];
     
-    [_displayLink release];
-    
     [_frameImages release];
     [_frameStartTimes release];
     
     [super dealloc];
+}
+
+-(void)willMoveToWindow:(UIWindow *)newWindow
+{
+    if (newWindow == nil) // at the moment the method like viewWillDisappear in view controller
+    {
+        [self stop];
+    }
+    else // at the moment the method like viewWillAppear in view controller
+    {
+        [self start];
+    }
 }
 
 - (id)initWithFrame:(CGRect)frame
@@ -68,7 +81,6 @@
     }
     return self;
 }
-
 
 -(void)setData:(NSData *)data
 {
@@ -190,7 +202,7 @@
     
     _currentTimePoint += displayLink.duration;
     if (_currentTimePoint >= [_frameStartTimes[_comparedFrameIndex] doubleValue]) {
-        if (_comparedFrameIndex >= _frameImages.count) {//one loop
+        if (_comparedFrameIndex >= _frameImages.count) { // one loop
             if (_repeatCount != NSUIntegerMax) {
                 _decreasingCount --;
                 if (_decreasingCount == 0) {
@@ -202,15 +214,15 @@
             _currentTimePoint = 0;
         }
         self.layer.contents = _frameImages[_comparedFrameIndex];
-        _comparedFrameIndex ++;//next compared frame index
+        _comparedFrameIndex ++; // next compared frame index
     }
 }
 
 - (void)start
 {
-    if (_displayLink.paused == YES) {// recover from pause state
+    if (_displayLink.paused == YES) { // recover from pause state
         _displayLink.paused = NO;
-    }else{// a new start
+    }else{ // a new start
         _currentTimePoint = 0;
         _decreasingCount = _repeatCount;
         

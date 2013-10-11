@@ -1,11 +1,11 @@
 //
 //  GEGifView.h
 //
-//  Created by godera on 9/14/13.
+//  Created by godera@yeah.net on 9/14/13.
 //  Copyright (c) 2013. All rights reserved.
 //
 //  QQ: 719181178
-/* from SvGifView and OLImageView */
+/* based on SvGifView and OLImageView */
 /* MRC */
 
 /*usage:
@@ -14,11 +14,11 @@
  gifView.repeatCount = 2;
  [self.view addSubview:gifView];
  _gifView = gifView;
- [gifView start];
+ [gifView start];//开始、停止、暂停 都是手动控制的
  */
 /* Attention: like UIImageView, its userInteractionEnabled defaults to NO, avoid to intercept touch */
 
-//0 to close debug, 1 to open
+// 0 to close debug, 1 to open
 #ifdef DEBUG
 #define DEBUG_SWITCH_GIF 0
 #else
@@ -38,14 +38,16 @@
 
 @interface GEGifView : UIView
 
-//data source properties
-@property (nonatomic, copy) NSData* data;//gif data
-@property (nonatomic, copy) NSString* fileName;//gif file from bundle
-@property (nonatomic, copy) NSString* filePath;//gif file path
-@property (nonatomic, copy) NSDictionary* frameItems;//contains frame images and frame start times.
+// data source properties
+@property (nonatomic, copy) NSData* data; // gif data
+@property (nonatomic, copy) NSString* fileName; // gif file from bundle
+@property (nonatomic, copy) NSString* filePath; // gif file path
+@property (nonatomic, copy) NSDictionary* frameItems; // contains frame images and frame start times.
 
-@property (nonatomic, assign) NSInteger repeatCount;//defaults to infinite
-@property (nonatomic, readonly) CGFloat duration;//the total time
+@property (nonatomic, copy) NSString* nameID; // identifier for gif
+
+@property (nonatomic, assign) NSInteger repeatCount; // defaults to infinite
+@property (nonatomic, readonly) CGFloat duration; // the total time
 
 @property (nonatomic, retain) UIImage* image;
 
@@ -54,9 +56,9 @@
  */
 @property (nonatomic, copy) NSString *runLoopMode;
 
-@property (nonatomic, assign) BOOL clearWhenStop;//defaults to YES.
+@property (nonatomic, assign) BOOL clearWhenStop; // defaults to YES.
 
-- (id)initWithFrame:(CGRect)frame;//default init method
+- (id)initWithFrame:(CGRect)frame; // default init method
 
 - (void)start;
 
