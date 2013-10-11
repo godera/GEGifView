@@ -236,7 +236,7 @@ typedef enum {
 
 - (void)start
 {
-    if (_mediaType == GEMediaType_IMAGE)
+    if (_mediaType == GEMediaType_IMAGE || [self isPreparedToPlay] == NO)
     {
         return;
     }
@@ -294,6 +294,11 @@ typedef enum {
 -(UIImage *)image
 {
     return [UIImage imageWithCGImage:(CGImageRef)self.layer.contents];
+}
+
+-(BOOL)isPreparedToPlay
+{
+    return self.frameImages && self.frameStartTimes;
 }
 
 -(NSString *)description
