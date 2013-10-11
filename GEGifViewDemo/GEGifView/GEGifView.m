@@ -28,6 +28,7 @@ typedef enum {
     NSInteger _decreasingCount;
     
     GEMediaType _mediaType;
+    BOOL _canRestart;
 }
 @property (copy, nonatomic) NSArray* frameImages; // CGImageRefs
 @property (copy, nonatomic) NSArray* frameStartTimes; // the 0 frame corresponds to time point 0.
@@ -57,10 +58,15 @@ typedef enum {
     if (newWindow == nil) // at the moment the method like viewWillDisappear in view controller
     {
         [self stop];
+        _canRestart = YES;
     }
     else // at the moment the method like viewWillAppear in view controller
     {
-        [self start];
+        if (_canRestart)
+        {
+            _canRestart = NO;
+            [self start];
+        }
     }
 }
 
@@ -241,9 +247,12 @@ typedef enum {
         return;
     }
     
-    if (_displayLink.paused == YES) { // recover from pause state
+    if (_displayLink.paused == YES) // recover from pause state
+    {
         _displayLink.paused = NO;
-    }else{ // a new start
+    }
+    else // a new start
+    {
         _currentTimePoint = 0;
         _decreasingCount = _repeatCount;
         
