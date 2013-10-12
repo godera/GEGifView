@@ -57,8 +57,11 @@ typedef enum {
 {
     if (newWindow == nil) // at the moment the method like viewWillDisappear in view controller
     {
-        [self stop];
-        _canRestart = YES;
+        if (_isAnimating)
+        {
+            [self stop];
+            _canRestart = YES;
+        }
     }
     else // at the moment the method like viewWillAppear in view controller
     {
@@ -263,6 +266,8 @@ typedef enum {
         _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(changeFrame:)];
         [_displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:_runLoopMode];
     }
+    
+    _isAnimating = YES;
 }
 
 - (void)stop
@@ -278,6 +283,8 @@ typedef enum {
     if (_clearWhenStop) {
         self.layer.contents = nil;
     }
+    
+    _isAnimating = NO;
 }
 
 - (void)pause
@@ -288,6 +295,7 @@ typedef enum {
     }
     
     _displayLink.paused = YES;
+    _isAnimating = NO;
 }
 
 -(CGFloat)duration

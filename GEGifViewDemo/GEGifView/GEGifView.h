@@ -57,6 +57,7 @@
 @property (nonatomic, copy) NSString *runLoopMode;
 
 @property (nonatomic, assign) BOOL clearWhenStop; // defaults to YES.
+@property (nonatomic, assign, readonly) BOOL isAnimating;
 
 - (id)initWithFrame:(CGRect)frame; // default init method
 
