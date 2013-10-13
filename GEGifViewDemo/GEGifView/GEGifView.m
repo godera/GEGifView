@@ -8,6 +8,10 @@
 /* supports both gif and image, based on SvGifView and OLImageView */
 /* MRC */
 
+#define KEY_FRAME_IMAGES @"KEY_FRAME_IMAGES"
+#define KEY_FRAME_START_TIMES @"KEY_FRAME_START_TIMES"
+#define KEY_GE_MEDIA_TYPE @"KEY_GE_MEDIA_TYPE"
+
 #import "GEGifView.h"
 #import <ImageIO/ImageIO.h>
 #import <QuartzCore/CoreAnimation.h>
@@ -29,10 +33,10 @@ typedef enum {
     
     GEMediaType _mediaType;
     BOOL _canRestart;
+    CADisplayLink* _displayLink;
 }
 @property (copy, nonatomic) NSArray* frameImages; // CGImageRefs
 @property (copy, nonatomic) NSArray* frameStartTimes; // the 0 frame corresponds to time point 0.
-@property (assign, nonatomic) CADisplayLink* displayLink;
 
 @end
 
@@ -147,11 +151,12 @@ typedef enum {
 {
     self.frameImages = [frameItems objectForKey:KEY_FRAME_IMAGES];
     self.frameStartTimes = [frameItems objectForKey:KEY_FRAME_START_TIMES];
+    _mediaType = [[frameItems objectForKey:KEY_GE_MEDIA_TYPE] integerValue];
 }
 
 -(NSDictionary *)frameItems
 {
-    return @{KEY_FRAME_IMAGES:_frameImages, KEY_FRAME_START_TIMES:_frameStartTimes};
+    return @{KEY_FRAME_IMAGES:_frameImages, KEY_FRAME_START_TIMES:_frameStartTimes, KEY_GE_MEDIA_TYPE:@(_mediaType)};
 }
 
 
@@ -160,23 +165,28 @@ typedef enum {
  */
 - (void)getFrameInfosFromGifSource:(CGImageSourceRef)gifSource
 {
+    // get frame count
+    size_t frameCount = CGImageSourceGetCount(gifSource);
+    
+    if (frameCount <= 1)
+    {
+        _mediaType = GEMediaType_IMAGE;
+        CGImageRef frame = CGImageSourceCreateImageAtIndex(gifSource, 0, NULL);
+        self.layer.contents = (id)frame;
+        CGImageRelease(frame);
+        
+        // assign values
+        self.frameImages = @[(id)frame];
+        self.frameStartTimes = @[@(0),@(CGFLOAT_MAX)];
+        return;
+    }
+    
+    _mediaType = GEMediaType_GIF;
     // init
     NSMutableArray* frameImages = [[NSMutableArray new] autorelease];
     NSMutableArray* frameStartTimes = [[NSMutableArray new] autorelease];
     NSMutableArray* frameDelayTimes = [[NSMutableArray new] autorelease];
     
-    // get frame count
-    size_t frameCount = CGImageSourceGetCount(gifSource);
-    
-    if (frameCount <= 1) {
-        _mediaType = GEMediaType_IMAGE;
-        CGImageRef frame = CGImageSourceCreateImageAtIndex(gifSource, 0, NULL);
-        self.layer.contents = (id)frame;
-        CGImageRelease(frame);
-        return;
-    }
-    
-    _mediaType = GEMediaType_GIF;
     for (size_t i = 0; i < frameCount; ++i)
     {
         // get each frame
@@ -213,7 +223,6 @@ typedef enum {
     // assign values
     self.frameImages = frameImages;
     self.frameStartTimes = frameStartTimes;
-    
 }
 
 - (void)changeFrame:(CADisplayLink*)displayLink
@@ -245,8 +254,14 @@ typedef enum {
 
 - (void)start
 {
-    if (_mediaType == GEMediaType_IMAGE || [self isPreparedToPlay] == NO)
+    if ([self isPreparedToPlay] == NO)
     {
+        return;
+    }
+    
+    if (_mediaType == GEMediaType_IMAGE)
+    {
+        self.layer.contents = _frameImages[0];
         return;
     }
     
@@ -274,13 +289,18 @@ typedef enum {
 {
     if (_mediaType == GEMediaType_IMAGE)
     {
+        if (_clearWhenStop)
+        {
+            self.layer.contents = nil;
+        }
         return;
     }
     
     [_displayLink invalidate];
     _displayLink = nil;
     
-    if (_clearWhenStop) {
+    if (_clearWhenStop)
+    {
         self.layer.contents = nil;
     }
     

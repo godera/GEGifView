@@ -31,9 +31,6 @@
 #define GELOG_GIF(...)
 #endif
 
-#define KEY_FRAME_IMAGES @"KEY_FRAME_IMAGES"
-#define KEY_FRAME_START_TIMES @"KEY_FRAME_START_TIMES"
-
 #import <UIKit/UIKit.h>
 
 @interface GEGifView : UIView
