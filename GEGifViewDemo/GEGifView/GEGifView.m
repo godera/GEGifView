@@ -35,6 +35,7 @@ typedef enum {
     BOOL _canRestart;
     CADisplayLink* _displayLink;
 }
+@property (copy, nonatomic) NSString* filePath;
 @property (copy, nonatomic) NSArray* frameImages; // CGImageRefs
 @property (copy, nonatomic) NSArray* frameStartTimes; // the 0 frame corresponds to time point 0.
 
@@ -45,12 +46,9 @@ typedef enum {
 
 - (void)dealloc
 {
-    [_data release];
-    [_filePath release];
-    [_fileName release];
-
     [_runLoopMode release];
     
+    [_filePath release];
     [_frameImages release];
     [_frameStartTimes release];
     
@@ -77,9 +75,9 @@ typedef enum {
     }
 }
 
-- (id)initWithFrame:(CGRect)frame
+- (id)init
 {
-    self = [super initWithFrame:frame];
+    self = [super init];
     if (self) {
         
         self.userInteractionEnabled = NO;
@@ -99,11 +97,9 @@ typedef enum {
     return self;
 }
 
--(void)setData:(NSData *)data
+-(id)initWithData:(NSData *)data
 {
-    NSData* temp = [data copy];
-    [_data release];
-    _data = temp;
+    self = [self init];
     
     CGImageSourceRef gifSource = CGImageSourceCreateWithData((CFDataRef)data, NULL);
     
@@ -112,15 +108,28 @@ typedef enum {
     if (gifSource) {
         CFRelease(gifSource);
     }
+    
+    return self;
 }
 
--(void)setFileName:(NSString *)fileName
+-(id)initWithFileName:(NSString *)fileName
 {
-    NSString* temp = [fileName copy];
-    [_fileName release];
-    _fileName = temp;
+    NSString *filePath = nil;
+    if ([fileName hasSuffix:@".gif"]) {
+        filePath = [[NSBundle mainBundle]pathForResource:fileName ofType:nil];
+    }else{
+        filePath = [[NSBundle mainBundle]pathForResource:fileName ofType:@"gif"];
+    }
     
-    NSString *filePath = [[NSBundle mainBundle]pathForResource:fileName ofType:nil];
+    return [self initWithFilePath:filePath];
+}
+
+-(id)initWithFilePath:(NSString *)filePath
+{
+    self = [self init];
+
+    self.filePath = filePath;
+    
     NSURL* fileURL = [NSURL fileURLWithPath:filePath];
     CGImageSourceRef gifSource = CGImageSourceCreateWithURL((CFURLRef)fileURL, NULL);
     
@@ -129,29 +138,19 @@ typedef enum {
     if (gifSource) {
         CFRelease(gifSource);
     }
+    
+    return self;
 }
 
--(void)setFilePath:(NSString *)filePath
+-(id)initWithFrameItems:(NSDictionary *)frameItems
 {
-    NSString* temp = [filePath copy];
-    [_filePath release];
-    _filePath = temp;
-    
-    NSURL* fileURL = [NSURL fileURLWithPath:filePath];
-    CGImageSourceRef gifSource = CGImageSourceCreateWithURL((CFURLRef)fileURL, NULL);
-    
-    [self getFrameInfosFromGifSource:gifSource];
-    
-    if (gifSource) {
-        CFRelease(gifSource);
-    }
-}
+    self = [self init];
 
-- (void)setFrameItems:(NSDictionary *)frameItems
-{
     self.frameImages = [frameItems objectForKey:KEY_FRAME_IMAGES];
     self.frameStartTimes = [frameItems objectForKey:KEY_FRAME_START_TIMES];
-    _mediaType = [[frameItems objectForKey:KEY_GE_MEDIA_TYPE] integerValue];
+    _mediaType = (GEMediaType)[[frameItems objectForKey:KEY_GE_MEDIA_TYPE] integerValue];
+
+    return self;
 }
 
 -(NSDictionary *)frameItems
@@ -175,7 +174,7 @@ typedef enum {
         self.layer.contents = (id)frame;
         CGImageRelease(frame);
         
-        // assign values
+        // copy values
         self.frameImages = @[(id)frame];
         self.frameStartTimes = @[@(0),@(CGFLOAT_MAX)];
         return;
@@ -220,7 +219,7 @@ typedef enum {
         [frameStartTimes addObject:@(currentFrameStartTime)];
     }
     
-    // assign values
+    // copy values
     self.frameImages = frameImages;
     self.frameStartTimes = frameStartTimes;
 }
@@ -340,7 +339,7 @@ typedef enum {
 
 -(NSString *)description
 {
-    return [NSString stringWithFormat:@"fileName = %@, filePath = %@, repeatCount = %ld, frameCount = %lu",_fileName,_filePath,(long)_repeatCount,(unsigned long)_frameImages.count];
+    return [NSString stringWithFormat:@"repeat count = %ld, frame count = %lu, frame items = %@, file path = %@", (long)_repeatCount, (unsigned long)_frameImages.count, [self frameItems], _filePath];
 }
 
 @end

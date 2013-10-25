@@ -9,8 +9,8 @@
 /* MRC */
 
 /*usage:
- GEGifView* gifView = [[[GEGifView alloc] initWithFrame:CGRectMake(0, 100, 320, 130)] autorelease];
- gifView.fileName = @"jiafei.gif";
+ GEGifView* gifView = [[[GEGifView alloc] initWithFileName:@"jiafei.gif"] autorelease];
+ gifView.frame = CGRectMake(0, 100, 320, 130);
  gifView.repeatCount = 2;
  [self.view addSubview:gifView];
  _gifView = gifView;
@@ -35,13 +35,7 @@
 
 @interface GEGifView : UIView
 
-// data source properties
-@property (nonatomic, copy) NSData* data; // gif data
-@property (nonatomic, copy) NSString* fileName; // gif file from bundle
-@property (nonatomic, copy) NSString* filePath; // gif file path
-@property (nonatomic, copy) NSDictionary* frameItems; // contains frame images and frame start times.
-
-@property (nonatomic, copy) NSString* nameID; // identifier for gif
+@property (nonatomic, copy) NSString* name; // identifier for gif
 
 @property (nonatomic, assign) NSInteger repeatCount; // defaults to infinite
 @property (nonatomic, readonly) CGFloat duration; // the total time
@@ -56,7 +50,13 @@
 @property (nonatomic, assign) BOOL clearWhenStop; // defaults to YES.
 @property (nonatomic, assign, readonly) BOOL isAnimating;
 
-- (id)initWithFrame:(CGRect)frame; // default init method
+// data source init methods
+- (id)initWithData:(NSData*)data;
+- (id)initWithFileName:(NSString*)fileName; // gif file from bundle
+- (id)initWithFilePath:(NSString*)filePath; // gif file path
+- (id)initWithFrameItems:(NSDictionary*)frameItems; // frameItems contains frame images and frame start times.
+
+-(NSDictionary *)frameItems; // contains frame images and frame start times.
 
 - (void)start;
 
