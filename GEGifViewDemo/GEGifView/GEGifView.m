@@ -36,6 +36,7 @@ typedef enum {
     CADisplayLink* _displayLink;
 }
 @property (retain, nonatomic) UIImageView* contentView; // frame container
+
 @property (copy, nonatomic) NSString* filePath;
 @property (copy, nonatomic) NSArray* frameImages; // UIImages
 @property (copy, nonatomic) NSArray* frameStartTimes; // the 0 frame corresponds to time point 0.
@@ -48,6 +49,8 @@ typedef enum {
 - (void)dealloc
 {
     [_runLoopMode release];
+    
+    [_contentView release];
     
     [_filePath release];
     [_frameImages release];
