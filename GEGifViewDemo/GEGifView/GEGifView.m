@@ -34,6 +34,7 @@ typedef enum {
     GEMediaType _mediaType;
     BOOL _canRestart;
     CADisplayLink* _displayLink;
+    BOOL _addSubviewsOnce;
 }
 @property (retain, nonatomic) UIImageView* contentView; // frame container
 
@@ -79,18 +80,28 @@ typedef enum {
     }
 }
 
+-(void)addSubviewsOnce
+{
+    if (_addSubviewsOnce == YES) {
+        return;
+    }
+    _addSubviewsOnce = YES;
+    
+    UIImageView* imageView = [[UIImageView new] autorelease];
+    imageView.contentMode = UIViewContentModeScaleAspectFit;
+    imageView.autoresizingMask = UIViewAutoresizingFlexibleHeight|UIViewAutoresizingFlexibleWidth;
+    [self addSubview:imageView];
+    self.contentView = imageView;
+}
+
 - (id)init
 {
     self = [super init];
     if (self) {
         
-        self.userInteractionEnabled = NO;
+        [self addSubviewsOnce];
         
-        UIImageView* imageView = [[UIImageView new] autorelease];
-        imageView.contentMode = UIViewContentModeScaleAspectFit;
-        imageView.autoresizingMask = UIViewAutoresizingFlexibleHeight|UIViewAutoresizingFlexibleWidth;
-        [self addSubview:imageView];
-        self.contentView = imageView;
+        self.userInteractionEnabled = NO;
         
         _runLoopMode = NSDefaultRunLoopMode;
         
