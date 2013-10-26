@@ -86,8 +86,8 @@ typedef enum {
         return;
     }
     _addSubviewsOnce = YES;
-    
-    UIImageView* imageView = [[UIImageView new] autorelease];
+        
+    UIImageView* imageView = [[[UIImageView alloc] initWithFrame:self.bounds] autorelease];
     imageView.contentMode = UIViewContentModeScaleAspectFit;
     imageView.autoresizingMask = UIViewAutoresizingFlexibleHeight|UIViewAutoresizingFlexibleWidth;
     [self addSubview:imageView];
