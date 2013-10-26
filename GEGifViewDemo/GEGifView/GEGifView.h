@@ -50,13 +50,19 @@
 @property (nonatomic, assign) BOOL clearWhenStop; // defaults to YES.
 @property (nonatomic, assign, readonly) BOOL isAnimating;
 
-// data source init methods
+ // data source init methods
 - (id)initWithData:(NSData*)data;
 - (id)initWithFileName:(NSString*)fileName; // gif file from bundle
 - (id)initWithFilePath:(NSString*)filePath; // gif file path
 - (id)initWithFrameItems:(NSDictionary*)frameItems; // frameItems contains frame images and frame start times.
 
 -(NSDictionary *)frameItems; // contains frame images and frame start times.
+
+ // data source setters
+-(void)setData:(NSData *)data;
+-(void)setFileName:(NSString *)fileName;
+-(void)setFilePath:(NSString *)filePath;
+-(void)setFrameItems:(NSDictionary *)frameItems;
 
 - (void)start;
 

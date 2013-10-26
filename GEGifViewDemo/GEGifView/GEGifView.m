@@ -117,10 +117,46 @@ typedef enum {
     return self;
 }
 
+#pragma mark - data source init methods
 -(id)initWithData:(NSData *)data
 {
     self = [self init];
     
+    [self setData:data];
+    
+    return self;
+}
+
+-(id)initWithFileName:(NSString *)fileName
+{
+    self = [self init];
+    
+    [self setFileName:fileName];
+    
+    return self;
+}
+
+-(id)initWithFilePath:(NSString *)filePath
+{
+    self = [self init];
+
+    [self setFilePath:filePath];
+    
+    return self;
+}
+
+-(id)initWithFrameItems:(NSDictionary *)frameItems
+{
+    self = [self init];
+
+    [self setFrameItems:frameItems];
+
+    return self;
+}
+
+#pragma mark - data source setters
+-(void)setData:(NSData *)data
+{
     CGImageSourceRef gifSource = CGImageSourceCreateWithData((CFDataRef)data, NULL);
     
     [self getFrameInfosFromGifSource:gifSource];
@@ -128,11 +164,9 @@ typedef enum {
     if (gifSource) {
         CFRelease(gifSource);
     }
-    
-    return self;
 }
 
--(id)initWithFileName:(NSString *)fileName
+-(void)setFileName:(NSString *)fileName
 {
     NSString *filePath = nil;
     if ([fileName hasSuffix:@".gif"]) {
@@ -141,14 +175,12 @@ typedef enum {
         filePath = [[NSBundle mainBundle]pathForResource:fileName ofType:@"gif"];
     }
     
-    return [self initWithFilePath:filePath];
+    [self setFilePath:filePath];
 }
 
--(id)initWithFilePath:(NSString *)filePath
+-(void)setFilePath:(NSString *)filePath
 {
-    self = [self init];
-
-    self.filePath = filePath;
+    _filePath = filePath;
     
     NSURL* fileURL = [NSURL fileURLWithPath:filePath];
     CGImageSourceRef gifSource = CGImageSourceCreateWithURL((CFURLRef)fileURL, NULL);
@@ -158,19 +190,13 @@ typedef enum {
     if (gifSource) {
         CFRelease(gifSource);
     }
-    
-    return self;
 }
 
--(id)initWithFrameItems:(NSDictionary *)frameItems
+-(void)setFrameItems:(NSDictionary *)frameItems
 {
-    self = [self init];
-
     self.frameImages = [frameItems objectForKey:KEY_FRAME_IMAGES];
     self.frameStartTimes = [frameItems objectForKey:KEY_FRAME_START_TIMES];
     _mediaType = (GEMediaType)[[frameItems objectForKey:KEY_GE_MEDIA_TYPE] integerValue];
-
-    return self;
 }
 
 -(NSDictionary *)frameItems
@@ -178,7 +204,7 @@ typedef enum {
     return @{KEY_FRAME_IMAGES:_frameImages, KEY_FRAME_START_TIMES:_frameStartTimes, KEY_GE_MEDIA_TYPE:@(_mediaType)};
 }
 
-
+#pragma mark - gif information getter
 /*
  * @brief gets gif information
  */
@@ -205,9 +231,9 @@ typedef enum {
     
     _mediaType = GEMediaType_GIF;
     // init
-    NSMutableArray* frameImages = [[NSMutableArray new] autorelease];
-    NSMutableArray* frameStartTimes = [[NSMutableArray new] autorelease];
-    NSMutableArray* frameDelayTimes = [[NSMutableArray new] autorelease];
+    NSMutableArray* frameImages = [NSMutableArray new];
+    NSMutableArray* frameStartTimes = [NSMutableArray new];
+    NSMutableArray* frameDelayTimes = [NSMutableArray new];
     
     for (size_t i = 0; i < frameCount; ++i)
     {
@@ -244,9 +270,13 @@ typedef enum {
         [frameStartTimes addObject:@(currentFrameStartTime)];
     }
     
+    [frameDelayTimes release];
+    
     // copy values
     self.frameImages = frameImages;
+    [frameImages release];
     self.frameStartTimes = frameStartTimes;
+    [frameStartTimes release];
 }
 
 - (void)changeFrame:(CADisplayLink*)displayLink
