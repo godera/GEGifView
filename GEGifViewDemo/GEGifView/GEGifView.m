@@ -35,8 +35,9 @@ typedef enum {
     BOOL _canRestart;
     CADisplayLink* _displayLink;
 }
+@property (retain, nonatomic) UIImageView* contentView; // frame container
 @property (copy, nonatomic) NSString* filePath;
-@property (copy, nonatomic) NSArray* frameImages; // CGImageRefs
+@property (copy, nonatomic) NSArray* frameImages; // UIImages
 @property (copy, nonatomic) NSArray* frameStartTimes; // the 0 frame corresponds to time point 0.
 
 @end
@@ -81,7 +82,12 @@ typedef enum {
     if (self) {
         
         self.userInteractionEnabled = NO;
-        self.contentMode = UIViewContentModeScaleAspectFit;
+        
+        UIImageView* imageView = [[UIImageView new] autorelease];
+        imageView.contentMode = UIViewContentModeScaleAspectFit;
+        imageView.autoresizingMask = UIViewAutoresizingFlexibleHeight|UIViewAutoresizingFlexibleWidth;
+        [self addSubview:imageView];
+        self.contentView = imageView;
         
         _runLoopMode = NSDefaultRunLoopMode;
         
@@ -170,12 +176,15 @@ typedef enum {
     if (frameCount <= 1)
     {
         _mediaType = GEMediaType_IMAGE;
-        CGImageRef frame = CGImageSourceCreateImageAtIndex(gifSource, 0, NULL);
-        self.layer.contents = (id)frame;
-        CGImageRelease(frame);
+        
+        CGImageRef frameCG = CGImageSourceCreateImageAtIndex(gifSource, 0, NULL);
+        UIImage* frame = [[UIImage alloc] initWithCGImage:frameCG];
+        CGImageRelease(frameCG);
+        self.contentView.image = frame;
+        [frame release];
         
         // copy values
-        self.frameImages = @[(id)frame];
+        self.frameImages = @[frame];
         self.frameStartTimes = @[@(0),@(CGFLOAT_MAX)];
         return;
     }
@@ -189,9 +198,11 @@ typedef enum {
     for (size_t i = 0; i < frameCount; ++i)
     {
         // get each frame
-        CGImageRef frame = CGImageSourceCreateImageAtIndex(gifSource, i, NULL);
-        [frameImages addObject:(id)frame];
-        CGImageRelease(frame);
+        CGImageRef frameCG = CGImageSourceCreateImageAtIndex(gifSource, i, NULL);
+        UIImage* frame = [[UIImage alloc] initWithCGImage:frameCG];
+        CGImageRelease(frameCG);
+        [frameImages addObject:frame];
+        [frame release];
         
         // get gif info with each frame
         NSDictionary *dict = (NSDictionary*)CGImageSourceCopyPropertiesAtIndex(gifSource, i, NULL);
@@ -246,7 +257,7 @@ typedef enum {
             _comparedFrameIndex = 0;
             _currentTimePoint = 0;
         }
-        self.layer.contents = _frameImages[_comparedFrameIndex];
+        self.contentView.image = _frameImages[_comparedFrameIndex];
         _comparedFrameIndex ++; // next compared frame index
     }
 }
@@ -260,7 +271,7 @@ typedef enum {
     
     if (_mediaType == GEMediaType_IMAGE)
     {
-        self.layer.contents = _frameImages[0];
+        self.contentView.image = _frameImages[0];
         return;
     }
     
@@ -273,7 +284,7 @@ typedef enum {
         _currentTimePoint = 0;
         _decreasingCount = _repeatCount;
         
-        self.layer.contents = _frameImages[0];
+        self.contentView.image = _frameImages[0];
         _comparedFrameIndex = 1;
         
         [_displayLink invalidate];
@@ -290,7 +301,7 @@ typedef enum {
     {
         if (_clearWhenStop)
         {
-            self.layer.contents = nil;
+            self.contentView.image = nil;
         }
         return;
     }
@@ -300,7 +311,7 @@ typedef enum {
     
     if (_clearWhenStop)
     {
-        self.layer.contents = nil;
+        self.contentView.image = nil;
     }
     
     _isAnimating = NO;
@@ -324,12 +335,12 @@ typedef enum {
 
 -(void)setImage:(UIImage *)image
 {
-    self.layer.contents = (id)[image CGImage];
+    self.contentView.image = image;
 }
 
 -(UIImage *)image
 {
-    return [UIImage imageWithCGImage:(CGImageRef)self.layer.contents];
+    return self.contentView.image;
 }
 
 -(BOOL)isPreparedToPlay
