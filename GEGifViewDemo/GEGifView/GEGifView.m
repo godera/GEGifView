@@ -38,7 +38,6 @@ typedef enum {
 }
 @property (retain, nonatomic) UIImageView* contentView; // frame container
 
-@property (copy, nonatomic) NSString* filePath;
 @property (copy, nonatomic) NSArray* frameImages; // UIImages
 @property (copy, nonatomic) NSArray* frameStartTimes; // the 0 frame corresponds to time point 0.
 
@@ -53,7 +52,6 @@ typedef enum {
     
     [_contentView release];
     
-    [_filePath release];
     [_frameImages release];
     [_frameStartTimes release];
     
@@ -179,9 +177,7 @@ typedef enum {
 }
 
 -(void)setFilePath:(NSString *)filePath
-{
-    _filePath = filePath;
-    
+{    
     NSURL* fileURL = [NSURL fileURLWithPath:filePath];
     CGImageSourceRef gifSource = CGImageSourceCreateWithURL((CFURLRef)fileURL, NULL);
     
@@ -394,7 +390,7 @@ typedef enum {
 
 -(NSString *)description
 {
-    return [NSString stringWithFormat:@"repeat count = %ld, frame count = %lu, frame items = %@, file path = %@", (long)_repeatCount, (unsigned long)_frameImages.count, [self frameItems], _filePath];
+    return [NSString stringWithFormat:@"repeat count = %ld, frame count = %lu, frame items = %@", (long)_repeatCount, (unsigned long)_frameImages.count, [self frameItems]];
 }
 
 @end
