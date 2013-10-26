@@ -94,11 +94,11 @@ typedef enum {
     self.contentView = imageView;
 }
 
-- (id)init
+- (id)initWithFrame:(CGRect)frame
 {
-    self = [super init];
+    self = [super initWithFrame:frame];
     if (self) {
-        
+        // Initialization code
         [self addSubviewsOnce];
         
         self.userInteractionEnabled = NO;
